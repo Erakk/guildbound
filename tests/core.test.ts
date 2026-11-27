@@ -501,7 +501,7 @@ describe('sieges', () => {
     expect(r.siege?.won).toBe(true);
     expect(r.siege?.waves).toBeGreaterThanOrEqual(3);
     expect(r.chestCards).toBe(1);
-    expect(r.items.length).toBeGreaterThanOrEqual(3);
+    expect(r.items.length).toBeGreaterThanOrEqual(1); // one Mithril piece: gear is mostly forged in town
     expect(sim.units.filter((u) => u.side === 'enemy').length).toBeGreaterThan(60);
     // Same seed, same siege.
     const again = createSim({ regionId: 'gobfort', party, orders: { focus: 'hunt', stance: 'balanced', retreatAtPct: 20 }, seed: 31, siege: true });
@@ -1463,7 +1463,8 @@ describe('scouting, sites, captains and secret heroes', () => {
       runUntil(sim, []);
       const r = buildReport(sim);
       expect(r.site?.cleared).toBe(true);
-      if (kind !== 'shrine') expect(r.items.length).toBeGreaterThan(0);
+      // A hoard holds gear only now and then (HOARD_ITEM); otherwise materials and pack pieces.
+      if (kind !== 'shrine') expect(r.items.length + Object.keys(r.materials).length).toBeGreaterThan(0);
     }
   }, 120_000);
 

@@ -13,7 +13,7 @@ import { canReach, holdNeed, holdOf, secured } from './hold';
 /** Where each material turns up, for hints. */
 const SOURCE: Record<Material, string> = {
   wood: 'wood from plains, farms, forests and coasts',
-  stone: 'stone from hills, mountains, ruins and barrows',
+  stone: 'stone from hills, mountains, ruins and barrows (and a few field stones on every trip near town)',
   iron: 'iron from hills, mountains, ruins and the badlands',
   herbs: 'herbs from plains, marshes and haunted woods',
   hides: 'hides from farms, forests, marshes and coasts',
@@ -139,7 +139,7 @@ export function nextGoals(s: GameState): string[] {
     const best = s.explored.map((id) => REGION_BY_ID[id]).filter((r) => r && !secured(s, r.id)).sort((a, b) => holdNeed(a) - holdOf(s, a.id) - (holdNeed(b) - holdOf(s, b.id)))[0];
     goals.push(`Every area scouts can reach is on the map. Secure one to push further${best ? `: ${best.name} needs ${holdNeed(best) - holdOf(s, best.id)} more hold` : ''}. Every trip that comes home adds hold; clearing every monster group, a site or the area's trouble adds more.`);
   }
-  if (lvl('weaponsmith') < 1) goals.push('Build the Weaponsmith in Town for better weapons.');
+  if (lvl('weaponsmith') < 1) goals.push('Build the Weaponsmith in Town: gear is rarely found on the road, so most of it is forged in town.');
   // The Town Hall caps every other building: say what it still needs, and where that comes from.
   const th = lvl('townhall') || 1;
   if (th < 5) {

@@ -152,9 +152,49 @@ export function addItem(state: GameState, defId: string): ItemInstance {
   return it;
 }
 
+/** The two smithies, which forge gear to order instead of selling it off the shelf. */
+export type Forge = 'weaponsmith' | 'armorer';
+export const FORGES: Forge[] = ['weaponsmith', 'armorer'];
+const isForge = (shop: string): shop is Forge => shop === 'weaponsmith' || shop === 'armorer';
+
+/** How long a piece takes at the anvil, by metal: iron 45 seconds, steel 3 minutes, mithril 8. */
+export const FORGE_SEC = [0, 45, 180, 480];
+export function forgeTime(d: ItemDef): number {
+  return FORGE_SEC[Math.max(1, Math.min(3, d.tier))] * 1000;
+}
+
+/** What a smithy is making now, if anything. */
+export function forgeJob(state: GameState, shop: Forge) {
+  return state.forge?.[shop] ?? null;
+}
+
+/** Orders a piece from a smithy: paid up front, ready when the smith is done. One piece at a time per smithy. */
+export function startForge(state: GameState, defId: string, now: number): boolean {
+  const d = ITEM_BY_ID[defId];
+  if (!d || !isForge(d.shop) || d.named || d.tribe) return false;
+  if (level(state, d.shop) < d.tier || forgeJob(state, d.shop) || !canAfford(state, d.cost)) return false;
+  pay(state, d.cost);
+  (state.forge ??= {})[d.shop] = { defId, startedAt: now, endsAt: now + forgeTime(d) };
+  return true;
+}
+
+/** Finished pieces go to the storehouse. Returns what was finished. */
+export function tickForge(state: GameState, now: number): ItemDef[] {
+  const done: ItemDef[] = [];
+  for (const shop of FORGES) {
+    const job = state.forge?.[shop];
+    if (!job || now < job.endsAt) continue;
+    delete state.forge![shop];
+    addItem(state, job.defId);
+    done.push(ITEM_BY_ID[job.defId]);
+  }
+  return done;
+}
+
+/** Buys off the shelf: only the Market's jewelry. The smithies forge to order (startForge). */
 export function buyItem(state: GameState, defId: string): ItemInstance | null {
   const d = ITEM_BY_ID[defId];
-  if (!d || level(state, d.shop) < d.tier || !canAfford(state, d.cost)) return null;
+  if (!d || isForge(d.shop) || level(state, d.shop) < d.tier || !canAfford(state, d.cost)) return null;
   pay(state, d.cost);
   return addItem(state, defId);
 }

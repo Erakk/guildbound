@@ -772,7 +772,8 @@ function win(sim: Sim) {
   sim.xp += 200;
   const loot = LOOT_ITEMS.filter((i) => i.tier === 3);
   const found: string[] = [];
-  for (let i = 0; i < 3; i++) {
+  // Gear is mostly forged in town now: the vault holds one Mithril piece.
+  for (let i = 0; i < 1; i++) {
     const it = sim.rng.pick(loot.filter((x) => !found.includes(x.name)));
     sim.items.push(it.id);
     found.push(it.name);

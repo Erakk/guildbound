@@ -440,6 +440,10 @@ export function formationOffsets(rows: (Row | null)[]): [number, number][] {
   return out;
 }
 
+/** Field stones: every trip to a stoneless area this close to home brings FIELD_STONE + tier stone. */
+export const FIELD_STONE_RING = 1;
+export const FIELD_STONE = 2;
+
 export const BIOME_MATERIALS: Record<Biome, [Material, Material]> = {
   plains: ['wood', 'herbs'],
   farm: ['wood', 'hides'],
@@ -944,6 +948,12 @@ export function createSim(params: SimParams): Sim {
     }
   }
   if (sim.roadMult > 1) log(sim, 'The Freeholders know these farm roads: the party made good time.');
+  // Near home there's always a little stone, even where the land gives none: tumbled field walls and old
+  // boundary stones along the road. Enough to keep the town growing; quarries (hills, ruins) give far more.
+  if (!siege && region.ring <= FIELD_STONE_RING && !BIOME_MATERIALS[region.biome].includes('stone')) {
+    gain(sim, 'stone', FIELD_STONE + region.tier);
+    log(sim, 'Tumbled field walls lined the road out: the party loaded a few good stones on the cart for the town.');
+  }
   if (sim.stealth) log(sim, 'The Thornkin led the party under the trees, quiet as moss.');
   if (siege) setupSiege(sim);
   else if (region.siege) log(sim, 'The fortress is still a smoking ruin. Only a few goblin stragglers remain.');
@@ -1317,12 +1327,16 @@ function openVault(sim: Sim, c: Chest) {
     return;
   }
   const itemTier = Math.max(1, Math.min(3, Math.round(tier * 0.7) + 1));
-  const it = sim.rng.pick(LOOT_ITEMS.filter((i) => i.tier === itemTier));
-  sim.items.push(it.id);
+  const it = sim.rng.chance(HOARD_ITEM) ? sim.rng.pick(LOOT_ITEMS.filter((i) => i.tier === itemTier)) : null;
+  if (it) sim.items.push(it.id);
+  else {
+    const m = sim.rng.pick(BIOME_MATERIALS[sim.region.biome]);
+    gain(sim, m, 3 + tier);
+  }
   const piece: PackType = tier >= 5 ? 'champion' : tier >= 3 ? 'veteran' : 'recruit';
   const n = piece === 'recruit' ? 3 : piece === 'veteran' ? 2 : 1;
   const got = addPieces(sim, piece, n, c);
-  log(sim, `The hoard of ${s?.name ?? 'the site'}: ${c.gold} gold, ${/^[AEIOU]/.test(it.name) ? 'an' : 'a'} ${it.name} and ${pieceName(got, n)}!`);
+  log(sim, `The hoard of ${s?.name ?? 'the site'}: ${c.gold} gold, ${it ? `${/^[AEIOU]/.test(it.name) ? 'an' : 'a'} ${it.name}` : 'a heap of raw goods for the smiths'} and ${pieceName(got, n)}!`);
 }
 
 export function activateGroup(sim: Sim, g: number, chargedBy?: Unit) {
@@ -1671,7 +1685,8 @@ function takeChest(sim: Sim, c: Chest, lead = 'A chest by the path', itemBonus =
     sim.shards += 1;
     extra += ', and a Starshard glowing in the bottom';
   }
-  const itemChance = c.kind === 'ornate' ? 1 : 0.2 + (sim.orders.focus === 'treasure' ? 0.15 : 0) + (c.kind === 'strongbox' ? 0.15 : 0) + itemBonus;
+  const itemChance = itemBonus >= 1 ? 0.5 : c.kind === 'ornate' ? ORNATE_ITEM + itemBonus * RARE_ITEMS
+    : (0.2 + (sim.orders.focus === 'treasure' ? 0.15 : 0) + (c.kind === 'strongbox' ? 0.15 : 0) + itemBonus) * RARE_ITEMS;
   if (sim.rng.chance(itemChance)) {
     const tier = Math.max(1, Math.min(3, Math.round(sim.region.tier * 0.7)));
     const it = sim.rng.pick(LOOT_ITEMS.filter((i) => i.tier === tier));
@@ -1885,7 +1900,7 @@ function arriveAtFork(sim: Sim, f: Fork) {
       }
     }
     if (secret.mana) sim.mana = MANA_MAX;
-    if (sim.rng.chance(secret.item)) {
+    if (sim.rng.chance(secret.item * SECRET_ITEM)) {
       const it = sim.rng.pick(LOOT_ITEMS.filter((i) => i.tier === Math.max(1, Math.min(3, Math.round(tier * 0.7) + 1))));
       sim.items.push(it.id);
       log(sim, `Among the find: ${/^[AEIOU]/.test(it.name) ? 'an' : 'a'} ${it.name}, ${gold} gold and ${pieceName(rollPiece(sim, SECRET_PIECE_ROLL, f.poi)!)}.`);
@@ -1926,7 +1941,7 @@ function arriveAtFork(sim: Sim, f: Fork) {
       if (party.some((u) => u.personality === 'protective')) sim.morale = Math.min(100, sim.morale + 5);
       const who = sim.rng.pick(['a lost shepherd', 'a wounded knight', 'a pedlar stuck in the mud', 'a hermit with a sprained ankle']);
       log(sim, `It was ${who}. The party helped, and was thanked with ${gold} gold.`);
-      if (sim.rng.chance(0.25)) {
+      if (sim.rng.chance(0.25 * RARE_ITEMS)) {
         const it = sim.rng.pick(LOOT_ITEMS.filter((i) => i.tier === Math.max(1, Math.min(3, Math.round(tier * 0.7)))));
         sim.items.push(it.id);
         log(sim, `They also pressed ${/^[AEIOU]/.test(it.name) ? 'an' : 'a'} ${it.name} into the Captain's hands.`);
@@ -2286,6 +2301,16 @@ function legendaryChest(sim: Sim) {
   const lead = lordSlain ? `In the lord's lair: a Legendary chest` : 'With the land cleared, the party found a Legendary chest';
   log(sim, `${lead}, holding ${shards} Starshard${shards > 1 ? 's' : ''}${item ? ` and ${ITEM_BY_ID[item].name}` : ''}!`);
 }
+
+/**
+ * Gear is mostly made in town (the Weaponsmith and Armorer forge it); out on the road it's a rare find.
+ * RARE_ITEMS scales the ordinary chances (chests, bedrolls, a grateful traveller); hoards, ornate chests
+ * and secret finds have their own odds.
+ */
+export const RARE_ITEMS = 0.1;
+export const HOARD_ITEM = 0.3;
+export const ORNATE_ITEM = 0.15;
+export const SECRET_ITEM = 0.35;
 
 /** Share of the haul lost for each hero knocked out: they have to be carried home, and the loot left behind. */
 export const KNOCKOUT_LOSS = 0.33;
@@ -2765,7 +2790,7 @@ function applyDiscovery(sim: Sim, f: Find, choice: number, by: 'guildmaster' | '
     case 'campfire:0': healParty(sim, 0.33); say('The party rested by the warm embers.', 'A good rest'); break;
     case 'campfire:1': {
       const gold = giveGold(sim, 10 * t, at);
-      const item = sim.rng.chance(0.3) ? someItem(sim) : null;
+      const item = sim.rng.chance(0.3 * RARE_ITEMS) ? someItem(sim) : null;
       const caught = !has(sim, ['rogue']) && sim.rng.chance(0.3);
       say(`The bedrolls held ${gold} gold${item ? ` and ${/^[AEIOU]/.test(item) ? 'an' : 'a'} ${item}` : ''}.${caught ? ' Then their owners came back.' : ''}`, caught ? 'Loot, and angry owners' : 'Loot from the bedrolls');
       if (caught) { ambush(sim, at, bandits, 2 + Math.floor(t / 2)); shout('Company!'); }
@@ -2806,8 +2831,9 @@ function applyDiscovery(sim: Sim, f: Find, choice: number, by: 'guildmaster' | '
     case 'frozen:0': {
       const mage = has(sim, ['mage']);
       if (!mage) sim.pauseUntil = sim.tick + 8 * TPS;
-      const item = someItem(sim, 1);
-      say(`${mage ? 'A little magefire' : 'A long while by a fire'} freed the pack: ${/^[AEIOU]/.test(item) ? 'an' : 'a'} ${item}.`, 'A frozen pack, thawed');
+      const item = sim.rng.chance(HOARD_ITEM) ? someItem(sim, 1) : null;
+      if (!item) { gain(sim, 'hides', 2 + t); gain(sim, 'herbs', 1 + t); }
+      say(`${mage ? 'A little magefire' : 'A long while by a fire'} freed the pack: ${item ? `${/^[AEIOU]/.test(item) ? 'an' : 'a'} ${item}` : 'furs and dried herbs, still good'}.`, 'A frozen pack, thawed');
       break;
     }
     case 'frozen:1': { const g = giveGold(sim, 14 * t, at); say(`The traveller's purse: ${g} gold.`, 'A frozen purse'); break; }

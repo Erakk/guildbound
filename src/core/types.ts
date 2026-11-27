@@ -408,6 +408,8 @@ export interface GameState {
   /** Region ids the guild has explored. */
   explored: string[];
   construction: { id: string; level: number; endsAt: number } | null;
+  /** Gear being forged at the Weaponsmith and the Armorer: one piece at a time in each. */
+  forge?: Partial<Record<'weaponsmith' | 'armorer', { defId: string; startedAt: number; endsAt: number }>>;
   tavernNextPackAt: number;
   /** The guild's hold on each explored area (see core/hold): secured areas let scouts go further. */
   hold?: Record<string, number>;

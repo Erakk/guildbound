@@ -387,7 +387,7 @@ function placePanel(app: App, id: string, close: () => void): HTMLElement {
   // What the place can do for the guild.
   if (lvl > 0) {
     const acts: HTMLElement[] = [];
-    if (id === 'weaponsmith' || id === 'armorer') acts.push(h('button.btn', { onclick: () => shopModal(app, id) }, 'Browse the wares'));
+    if (id === 'weaponsmith' || id === 'armorer') acts.push(h('button.btn', { onclick: () => shopModal(app, id) }, town.forgeJob(app.game.state, id) ? `Forging: ${ITEM_BY_ID[town.forgeJob(app.game.state, id)!.defId].name}` : 'Order gear'));
     if (id === 'market') acts.push(h('button.btn', { onclick: () => marketModal(app) }, 'Trade'));
     if (id === 'temple') acts.push(h('button.btn', { onclick: () => templeModal(app) }, 'Visit the healers'));
     if (id === 'townhall') acts.push(h('button.btn.secondary', { onclick: () => ledgerModal(app) }, 'Builders\' ledger'));
@@ -457,7 +457,7 @@ function buildingCard(app: App, id: string): HTMLElement {
   const next = lvl + 1;
   const actions: (HTMLElement | null)[] = [];
   if (lvl > 0) {
-    if (id === 'weaponsmith' || id === 'armorer') actions.push(h('button.btn.small', { onclick: () => shopModal(app, id) }, 'Shop'));
+    if (id === 'weaponsmith' || id === 'armorer') actions.push(h('button.btn.small', { onclick: () => shopModal(app, id) }, 'Forge'));
     if (id === 'market') actions.push(h('button.btn.small', { onclick: () => marketModal(app) }, 'Trade'));
     if (id === 'temple') actions.push(h('button.btn.small', { onclick: () => templeModal(app) }, 'Healing'));
     if (id === 'tavern') {
@@ -494,21 +494,39 @@ function itemRow(d: ItemDef, action: HTMLElement): HTMLElement {
 
 export function shopModal(app: App, shop: 'weaponsmith' | 'armorer') {
   const box = h('div.panel.col', { style: { gap: '10px' } });
-  const close = modal(box);
+  let timer = 0;
+  const close = modal(box, () => clearInterval(timer));
+  let busy = '';
   const render = () => {
     const s = app.game.state;
     const stock = town.shopStock(s, shop);
+    const job = town.forgeJob(s, shop);
+    busy = job?.defId ?? '';
+    const jd = job ? ITEM_BY_ID[job.defId] : null;
+    const pct = job ? Math.min(100, ((app.game.now() - job.startedAt) / (job.endsAt - job.startedAt)) * 100) : 0;
     setChildren(box,
-      h('div.row', { style: { alignItems: 'baseline' } }, h('h2.grow', BUILDING_BY_ID[shop].name), h('span.muted', `${s.gold} gold`)),
-      h('p.muted', 'Bought items go to your storehouse. Equip them from a hero\'s page.'),
-      h('div', { style: { maxHeight: '60vh', overflow: 'auto' } }, stock.map((d) =>
+      h('div.row', { style: { alignItems: 'baseline' } }, h('h2.grow', BUILDING_BY_ID[shop].name), h('span.muted', `${Math.floor(s.gold)} gold`)),
+      h('p.muted', `Order a piece and the smith forges it from your gold and materials, one piece at a time. Finished gear goes to the backpack. Gear is rarely found on the road, so most of it is made here.`),
+      job && jd
+        ? h('div.forge-job.row', { style: { alignItems: 'center', gap: '12px' } },
+            svgEl(itemIconSvg(jd), `bp-big t${jd.tier}`),
+            h('div.grow', h('div', h('b', `At the anvil: ${jd.name}`), h('span.muted', ` · ${fmtTime((job.endsAt - app.game.now()) / 1000)} left`)),
+              h('div.forge-bar', h('div', { style: { width: `${pct}%` } }))),
+            h('button.btn.secondary.small', { onclick: () => { app.game.rushForge(shop); render(); }, title: 'Testing aid: finish now' }, 'Finish now (test)'))
+        : h('div.forge-job.dim', 'The anvil is free.'),
+      h('div', { style: { maxHeight: '56vh', overflow: 'auto' } }, stock.map((d) =>
         itemRow(d, h('div.col', { style: { alignItems: 'flex-end', gap: '4px' } },
-          h('div', { style: { fontSize: '13px' } }, costLine(app, d.cost)),
-          h('button.btn.small', { disabled: !town.canAfford(s, d.cost), onclick: () => { app.game.buyItem(d.id); render(); } }, 'Buy'))))),
+          h('div', { style: { fontSize: '13px' } }, costLine(app, d.cost), h('span.dim', ` · ${fmtTime(town.forgeTime(d) / 1000)}`)),
+          h('button.btn.small', { disabled: !!job || !town.canAfford(s, d.cost), title: job ? 'The smith is busy with another piece' : '', onclick: () => { app.game.forgeItem(d.id); render(); } }, 'Forge'))))),
       h('div', h('button.btn.secondary.small', { onclick: close }, 'Close')),
     );
   };
   render();
+  // Keep the countdown moving, and show the finished piece.
+  timer = window.setInterval(() => {
+    if (!box.isConnected) return clearInterval(timer);
+    if (busy || town.forgeJob(app.game.state, shop)) render();
+  }, 1000);
 }
 
 export function marketModal(app: App) {

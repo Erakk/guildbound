@@ -286,3 +286,66 @@ describe('class-specific gear', () => {
     expect(after.items.some((i) => i.uid === plate.uid)).toBe(true);
   });
 });
+
+describe('gear is forged in town, rarely found', () => {
+  it('the smithies forge to order: paid up front, one piece at a time, ready after its time', async () => {
+    const town = await import('../src/core/town');
+    const { ITEM_BY_ID } = await import('../src/core/data/items');
+    const s = newGame(0);
+    s.gold = 5000;
+    s.materials = { wood: 99, stone: 99, iron: 99, herbs: 99, hides: 99 };
+    expect(town.startForge(s, 'sword_1', 0)).toBe(false); // no Weaponsmith yet
+    s.buildings.weaponsmith = 1;
+    expect(town.buyItem(s, 'sword_1')).toBeNull(); // not off the shelf
+    expect(town.startForge(s, 'sword_2', 0)).toBe(false); // steel needs level 2
+    const items = s.items.length;
+    expect(town.startForge(s, 'sword_1', 0)).toBe(true);
+    expect(s.gold).toBe(5000 - (ITEM_BY_ID.sword_1.cost.gold ?? 0));
+    expect(town.startForge(s, 'axe_1', 0)).toBe(false); // the anvil is busy
+    expect(town.tickForge(s, town.forgeTime(ITEM_BY_ID.sword_1) - 1)).toEqual([]);
+    expect(s.items.length).toBe(items);
+    expect(town.tickForge(s, town.forgeTime(ITEM_BY_ID.sword_1)).map((d) => d.id)).toEqual(['sword_1']);
+    expect(s.items.length).toBe(items + 1);
+    expect(town.forgeJob(s, 'weaponsmith')).toBeNull();
+    // The Market still sells jewelry off the shelf.
+    s.buildings.market = 1;
+    expect(town.buyItem(s, 'ring_arcana_1')).not.toBeNull();
+  });
+
+  it('a trip rarely brings gear home', async () => {
+    const { REGIONS } = await import('../src/core/data/world');
+    const { buildReport, createSim, runUntil } = await import('../src/core/sim/expedition');
+    let items = 0, trips = 0;
+    for (const r of REGIONS.filter((x) => x.ring <= 2 && !x.siege)) {
+      for (let seed = 1; seed <= 3; seed++) {
+        const state = newGame(0);
+        const party = state.parties[0].slots.map((u, i) => {
+          const hero = state.roster.find((x) => x.uid === u)!;
+          hero.level = 6;
+          return { hero, row: state.parties[0].rows[i], items: [] };
+        });
+        const sim = createSim({ regionId: r.id, party, orders: { focus: 'explore', stance: 'balanced', retreatAtPct: 25 }, seed: seed * 31 });
+        runUntil(sim, []);
+        items += buildReport(sim).items.length;
+        trips++;
+      }
+    }
+    // About one piece every five to eight trips (it used to be more than one a trip).
+    expect(items / trips).toBeLessThan(0.4);
+  }, 120_000);
+});
+
+describe('field stones near town', () => {
+  it('every trip to a stoneless first-ring area brings home a little stone', async () => {
+    const { buildReport, createSim, runUntil, FIELD_STONE } = await import('../src/core/sim/expedition');
+    const state = newGame(0);
+    const party = state.parties[0].slots.map((u, i) => {
+      const hero = state.roster.find((x) => x.uid === u)!;
+      hero.level = 4;
+      return { hero, row: state.parties[0].rows[i], items: [] };
+    });
+    const sim = createSim({ regionId: 'greenhollow', party, orders: { focus: 'explore', stance: 'balanced', retreatAtPct: 25 }, seed: 5 });
+    runUntil(sim, []);
+    expect(buildReport(sim).materials.stone ?? 0).toBeGreaterThanOrEqual(FIELD_STONE);
+  });
+});

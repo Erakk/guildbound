@@ -486,6 +486,9 @@ export class Game {
     this.tickScouts();
     const done = town.tickTown(this.state, this.now());
     if (done) this.toasts.push(`Construction finished: ${BUILDING_BY_ID[done]?.name ?? done}.`);
+    const forged = town.tickForge(this.state, this.now());
+    for (const d of forged) this.toasts.push(`Forged at the ${BUILDING_BY_ID[d.shop]?.name ?? 'smithy'}: ${d.name}. It's in the backpack.`);
+    if (forged.length) this.commit();
     // A new Mage Tower level: fill the new slots with spells already found.
     if (done === 'magetower') {
       if (this.state.firstSpell) {
@@ -528,6 +531,22 @@ export class Game {
     const ok = town.claimTavernPack(this.state, this.now());
     if (ok) this.commit();
     return ok;
+  }
+
+  /** Orders a piece from the Weaponsmith or the Armorer. */
+  forgeItem(defId: string): boolean {
+    const ok = town.startForge(this.state, defId, this.now());
+    if (ok) this.commit();
+    return ok;
+  }
+
+  /** Finishes a smithy's piece at once (testing aid). */
+  rushForge(shop: town.Forge) {
+    const job = this.state.forge?.[shop];
+    if (job) {
+      job.endsAt = this.now();
+      this.tickTown();
+    }
   }
 
   buyItem(defId: string): boolean {

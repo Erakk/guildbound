@@ -75,6 +75,7 @@ export function newGame(now = Date.now()): GameState {
     buildings: Object.fromEntries(BUILDINGS.map((b) => [b.id, b.start])),
     explored: [...START_EXPLORED],
     construction: null,
+    forge: {},
     tavernNextPackAt: 0,
     pity: { sinceRare: 0, sinceEpic: 0 },
     packsOpened: 0,

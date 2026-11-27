@@ -47,14 +47,14 @@ export const BUILDINGS: BuildingDef[] = [
   },
   {
     id: 'weaponsmith', name: 'Weaponsmith', maxLevel: 3, start: 0,
-    description: 'Forges weapons, tomes and quivers. Each level unlocks the next metal.',
+    description: 'Forges weapons, tomes and quivers to order, from gold and materials. Each level unlocks the next metal.',
     levels: ['', 'Iron weapons', 'Steel weapons', 'Mithril weapons'],
     cost: standard(100, (l) => ({ wood: 15 * l, stone: 10 * l, iron: 6 * l })),
     time: (l) => T[l + 1],
   },
   {
     id: 'armorer', name: 'Armorer', maxLevel: 3, start: 0,
-    description: 'Makes armor and shields. Each level unlocks the next metal.',
+    description: 'Forges armor, robes and shields to order, from gold and materials. Each level unlocks the next metal.',
     levels: ['', 'Iron armor and shields', 'Steel armor and shields', 'Mithril armor and shields'],
     cost: standard(100, (l) => ({ wood: 10 * l, stone: 15 * l, hides: 6 * l })),
     time: (l) => T[l + 1],

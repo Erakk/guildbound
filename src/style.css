@@ -734,3 +734,8 @@ button.pb-room:hover { border-color: var(--gold); color: #f6e9c9; }
 /* Gear the selected hero's class can't wear: greyed out in the backpack. */
 .bp-cell.cant { filter: grayscale(0.85) brightness(0.6); cursor: not-allowed; }
 .bp-cell.cant .bp-warn { color: #f0a08a; }
+
+/* The smithy's anvil: what's being forged and how far along it is. */
+.forge-job { padding: 8px 10px; border: 1px solid #6b5233; border-radius: 6px; background: rgba(40, 28, 16, 0.5); font-size: 14px; }
+.forge-bar { height: 8px; margin-top: 6px; border-radius: 4px; background: #2a1d10; overflow: hidden; }
+.forge-bar > div { height: 100%; background: linear-gradient(90deg, #c8742a, #f0b45a); transition: width 0.9s linear; }

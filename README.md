@@ -33,7 +33,7 @@ Then open http://localhost:5180.
 
 - Materials (wood, stone, iron, herbs, hides) from expeditions, by biome; a Gather focus doubles them.
 - Seven buildings with levels and build timers, one project at a time, capped by the Town Hall: Town Hall, Guild Hall (+XP), Tavern (free pack on a timer), Weaponsmith, Armorer, Temple, Market.
-- Gear: 66 items in three tiers across four slots (main hand, off hand, armor, jewelry), with the one-handed rule and class-specific gear. Bought in shops or found in chests.
+- Gear: 66 items in three tiers across four slots (main hand, off hand, armor, jewelry), with the one-handed rule and class-specific gear. Forged to order at the Weaponsmith and Armorer (jewelry from the Market); rarely found on the road.
 - Market: sell items and materials, buy materials and jewelry.
 - Wounds: heroes knocked out on a trip must rest before going out again; the Temple shortens that and can heal for gold.
 - Free formation: any mix of front and back rows, including all five in the back.
@@ -226,7 +226,7 @@ Then open http://localhost:5180.
 - **Mimics:** about one iron-bound chest or strongbox in twelve. Opening it, the chest grows teeth and bites (a greedy hero first); a Ranger or Rogue may poke it with a stick first, and then the party strikes first. Killed, it gives up the chest's loot, with a better item chance.
 - **Chest traps by stance:** iron-bound (25%) and ornate (40%) chests can hold a needle (one hero), choking gas (everyone) or an alarm bell (two monsters come running). Cautious parties always check and disarm (a few seconds); Balanced ones may have a Rogue, protective or curious hero spot it; Bold ones tear it open, trap and all, for 20% more gold.
 - **Rope bridges:** some mountain, hill, snow, badland and forest trails cross a gorge. The party crosses single file at 60% speed, so only the front reaches a fight first; a nearby group may hold the far end. A cowardly hero may freeze halfway; Dawnwings fly over.
-- **Story loot:** unguarded crates are a dead adventurer's pack (its map marks a new site in the area when the report comes in), a goblin stash (a heap of one material) or an overturned wagon (a good chance of an item).
+- **Story loot:** unguarded crates are a dead adventurer's pack (its map marks a new site in the area when the report comes in), a goblin stash (a heap of one material) or an overturned wagon (a better chance of an item).
 - **Find sets:** on some trips, three standing stones, spirit lanterns, cairns, tide bells or fire altars (by biome) stand along the trail. Click each while the party is near (they pulse); light all three for a hidden cache and +1 hold.
 - **Field journal** (Hall of Deeds): every discovery seen, page by page for each kind of land explored. A full page gives +10% gold on trips to that land.
 - **Area stories** (`data/stories.ts`): three chapters per area after the tutorial, told by the area's main monster family. 1: someone on the road asks for help; come home and the guild takes it on (+1 hold). 2: a tough lookout or den to clear (+1). 3: a named chief (three times as tough) with guards, and their chest (+3). The Map shows the next chapter.
@@ -241,7 +241,7 @@ Then open http://localhost:5180.
 **The expedition deck (phase 4m, `core/deck.ts`):** every area has a deck: its encounters, the discoveries of its kind of land, its features (rope bridge, find set) and up to three rare cards. Each trip is dealt a hand of 4 to 7 (longer trips, Explore orders and curious heroes draw more; the focus favours its discoveries; rare cards are drawn a seventh as often), and the hand decides what waits on the trail: the encounters (up to 2, or 3 on longer trips), the discoveries (up to 4, at least 1), a rope bridge or a find set. A new area's deck shows 6 cards; every point of hold opens 2 more, and a secured area has the whole deck. Cards dealt are remembered: the Map's area panel shows how much of the deck is open and seen, and "View deck" lays it out (seen cards face up, unseen face down, locked ones saying what opens them; rare cards gold-edged). A new rare card gets a toast.
 
 - **The White Stag:** stands among the trees and runs when the party comes near. Bring it down before it gets 750 paces away: gold, a Veteran pack piece and high spirits.
-- **The Lost Caravan:** a rich wreck by the road: 45-60 gold per tier and an item for sure.
+- **The Lost Caravan:** a rich wreck by the road: 45-60 gold per tier and an even chance of an item.
 - **Shrine of the Old Gods:** heals the party fully and blesses the rest of the trip (+20% gold and experience).
 
 **Dungeon delves (phase 4n, `sim/delve.ts`):** a party sent to a dungeon site walks a shorter trail to the dungeon's mouth and goes down the stairs. The path carries on underground, drawn below the map: five stone rooms in a row, with doorways, torches and flagstones.
@@ -321,6 +321,14 @@ The party turns back later while underground, and climbs back up the stairs on t
 - **In the backpack**, gear the open hero can't wear is greyed out with a ✕: it can't be dragged or put on, and its card says so ("Elowen can't use it: a Mage doesn't wear this."). Every item card and every shop row lists who wears it.
 - The old rule (any hero could use any weapon at half damage) is gone. Fights ignore anything a hero can't wear, and older saves move such gear back into the backpack.
 
+**Gear is forged in town, rarely found:**
+
+- **The road:** a trip brings home about one piece of gear in six (it was more than one a trip). An ordinary chest holds an item about 1 time in 50 (more with Treasure orders, a strongbox or a curious hero), an ornate chest about 1 in 7, a site's hoard and a frozen pack 3 in 10 (otherwise materials), a secret find about a third as often as before, and the Lost Caravan one time in two. Named gear (Legendary chests, sieges) and the travelling merchant are unchanged. A won siege's vault holds one Mithril piece instead of three.
+- **The smithies forge to order:** the Weaponsmith (weapons, tomes, quivers) and the Armorer (armor, robes, shields) no longer sell off the shelf. Pick a piece and press Forge: the gold and materials are paid up front, the piece is at the anvil for 45 seconds (iron), 3 minutes (steel) or 8 minutes (mithril), and then it goes to the backpack with a toast. Each smithy works on one piece at a time; the window shows the piece at the anvil with a countdown bar (plus "Finish now (test)"). The Market still sells jewelry off the shelf.
+- Code: `startForge`, `tickForge`, `forgeJob` and `FORGE_SEC` in `core/town.ts`, the `forge` field on the save; the drop odds are `RARE_ITEMS`, `HOARD_ITEM`, `ORNATE_ITEM` and `SECRET_ITEM` in `sim/expedition.ts`.
+
+**Field stones near town:** in the first ring only the Watchtower ruins give stone, and Town Hall 2 needs 25. Now every trip to a first-ring area whose land gives no stone (Greenhollow, the Old Mill, Brackenwood, Saltshore, Reedwater) brings home 2 + tier stone from tumbled field walls along the road (3 to 4 a trip), so the town keeps growing; hills, ruins and mountains still give far more (12-16 a trip). `FIELD_STONE` and `FIELD_STONE_RING` in `sim/expedition.ts`.
+
 **New card art (phase 3r):** every card is redrawn in the style of the final card design (Brannoc's card in the concept canvas).
 
 - **Frames by tribe material:** Ironroot iron, Freeholder oak and brass, Thornkin bark, Ashborn obsidian with ember edges, Fenfolk verdigris, Moonveil moon-silver, Dawnwings white gold and Hollowed bone. Each has rivets, corner brackets, a name plate, the tribe's emblem, a class badge, a rarity ribbon and a parchment panel. Epic and Legendary cards get gems and a glow; Legendary cards add a foil sheen.
@@ -367,7 +375,7 @@ The party turns back later while underground, and climbs back up the stairs on t
   - Rangers find more lairs, Rogues more caches and dungeons, and bards and mages more shrines.
   - On the Map, choose "Go for" a site. Sites sit partway along the trail, and a site trip gets 20% more time.
   - A site that's dealt with is gone; one that isn't stays for another try.
-  - Hoards pay gold, an item and pack pieces (Champion pieces from tier 5).
+  - Hoards pay gold, pack pieces (Champion pieces from tier 5) and sometimes an item (otherwise a heap of materials).
   - Slaying a Deep Marches lair beast counts for the Legendary chest.
 - **Site balance**, for a party at the recommended power:
   - caches and shrines almost always;
@@ -478,7 +486,7 @@ The party turns back later while underground, and climbs back up the stairs on t
    - Three clickable **ballistas** stand at the field's edge. Each bolt that hits makes her break off her next pass and takes 12% off her health when she lands (up to three bolts).
 4. **Kalvorax the Elder Wyrm:** she lands in front of her cave with two drakes. Below half health she rears up, breathes fire across the field and calls three more drakes.
 5. **The hoard:**
-   - double the usual vault gold, three Mithril items and a piece of named gear;
+   - double the usual vault gold, a Mithril item and a piece of named gear;
    - 3 Starshards, plus the Legendary chest for a slain lord (more Starshards and a likely second piece of named gear);
    - 4 Veteran and 3 Champion pieces, and a sealed chest.
 
@@ -659,7 +667,7 @@ While the tutorial runs, area trouble and contracts wait. Afterwards the quest b
 - **The horde:** waves of 14 (spearmen, archers, wolf riders, bombers and shamans) pour through the gateway, up to about 40 at once. The party holds the gateway, so goblins bunch up in the gap. Once it's quiet, the heroes go after stragglers.
 - **The keep:** Warlord Gnashgut and his Ironguard. The warlord rages below half health.
 - **The player helps:** spells on the packed horde, and powder kegs to click (one by the wall, two inside the gate) that blow up goblins and crack the gate.
-- **Aftermath:** the vault holds 1,000 gold, three Mithril items and a sealed chest. The fortress then lies razed for two weeks; until it is rebuilt, a trip there is a short visit to the ruins. Winning earns the Fortress Breaker achievement.
+- **Aftermath:** the vault holds 1,000 gold, a Mithril item and a sealed chest. The fortress then lies razed for two weeks; until it is rebuilt, a trip there is a short visit to the ruins. Winning earns the Fortress Breaker achievement.
 - **Two parties together:** with a second party, both can march to a siege as one force of 10 heroes, led by Party I's Captain.
 - **Balance, without spells or kegs:** a party at the expected tier-4 strength wins about half its sieges, a strong party nearly always wins, and a weak one never gets past the camps.
 

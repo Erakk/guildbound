@@ -58,7 +58,7 @@ export const TUTORIAL: TutorialStep[] = [
     text: 'The party fights on its own, but you can help. Beside the trail is an abandoned campfire: click it and choose what the party does there. If you don\'t, the Captain decides when they get there. This trip can\'t be lost.',
     done: (s) => flag(s, 'glint') || s.reports.length > 0 || flag(s, 'claimed') },
   { id: 'report', screen: 'guild', title: 'Back home',
-    text: 'When the party is back, read the report in the Guild Hall and collect the rewards. (On the Watch screen you can speed up time with the ×4 and ×16 buttons.)',
+    text: 'When the party is back, read the report in the Guild Hall and collect the rewards.',
     done: (s) => flag(s, 'claimed') },
   { id: 'equip', screen: 'heroes', title: 'Gear up',
     text: 'The party found an Iron Sword on the road. Open a fighter (Brannoc is a Warrior) and drag the sword from the backpack onto the weapon slot, or double-click it.',

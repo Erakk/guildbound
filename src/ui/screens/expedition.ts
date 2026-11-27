@@ -119,7 +119,6 @@ export function expeditionScreen(app: App): Screen {
     if (level > 1) b.append(h('span.lvl', `L${level}`));
     return { s, b: b as HTMLButtonElement, cd };
   });
-  const speedBtns = [1, 4, 16].map((n) => h(`button${game.speed === n ? '.on' : ''}`, { onclick: () => { game.speed = n; speedBtns.forEach((x, i) => x.classList.toggle('on', [1, 4, 16][i] === n)); } }, `×${n}`));
   const bc = h('div.hud.bc',
     ...spellBtns.map((x) => x.b),
     spellBtns.length
@@ -127,7 +126,6 @@ export function expeditionScreen(app: App): Screen {
           h('span.dim', 'Click discoveries by the trail'))
       : h('div.col', { style: { gap: '4px', fontSize: '13px', maxWidth: '230px' } }, h('b', 'Click discoveries by the trail'),
           h('span.dim', 'Click a discovery by the trail to decide what the party does there.')),
-    h('div.col', { style: { gap: '4px', fontSize: '12px' } }, h('span.dim', 'Test speed'), h('div.seg.speed', speedBtns)),
   );
 
   // With several trips under way: switch which one to watch.

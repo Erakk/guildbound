@@ -223,7 +223,6 @@ p { margin: 0; line-height: 1.45; }
 .spell:disabled { cursor: not-allowed; }
 .spell .cd { position: absolute; inset: 0; border-radius: 6px; background: rgba(20, 14, 10, 0.65); display: flex; align-items: center; justify-content: center; font-weight: 700; color: #f6e9c9; }
 .spell .key { position: absolute; left: 4px; top: 2px; font-size: 11px; color: var(--text-soft); }
-.speed { display: flex; gap: 4px; }
 
 .report-lines { display: flex; flex-direction: column; gap: 6px; font-size: 15px; line-height: 1.4; color: var(--ink); max-height: 300px; overflow: auto; }
 .stat-tiles { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }

@@ -18,7 +18,6 @@ Then open http://localhost:5180.
 - `npm test` runs the core tests and prints a balance table per region.
 - `npm run build` type-checks and builds to `dist/`.
 - In the browser console, `guildbound.game` is the running game (handy for testing).
-- On the live map, the **Test speed** buttons (×1 / ×4 / ×16) speed up time.
 
 ## What's in this first build
 

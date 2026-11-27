@@ -43,8 +43,6 @@ export class Game {
   private sims = new Map<number, Sim>();
   /** The expedition shown on the Watch screen. */
   private watching: number | null = null;
-  /** Extra speed for testing: 1 = real time. */
-  speed = 1;
   /** Short messages for the UI ("Tavern finished!"). */
   toasts: string[] = [];
   /** Achievements earned that the UI hasn't shown yet. */
@@ -468,7 +466,6 @@ export class Game {
   private loop(now: number) {
     const dt = Math.min(0.25, (now - this.lastFrame) / 1000);
     this.lastFrame = now;
-    if (this.speed > 1) this.timeSkew += dt * 1000 * (this.speed - 1);
     this.advance();
     this.slowTimer += dt;
     if (this.slowTimer > 0.5) {

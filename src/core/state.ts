@@ -1,5 +1,6 @@
 import { BUILDINGS } from './data/buildings';
 import { HERO_BY_ID, STARTER_HEROES } from './data/heroes';
+import { canWear, ITEM_BY_ID } from './data/items';
 import { WORLD_EVENT_MS } from './areas';
 import { STARTER_SPELLS } from './data/spells';
 import { REGION_BY_ID, START_EXPLORED } from './data/world';
@@ -117,6 +118,14 @@ export function newGame(now = Date.now()): GameState {
 export function migrate(s: GameState): GameState {
   const fresh = newGame(s.lastSeen);
   const out = { ...fresh, ...s } as GameState;
+  // Gear is class-specific now: anything a hero can't wear goes back in the backpack.
+  for (const h of out.roster ?? []) {
+    const cls = HERO_BY_ID[h.defId]?.heroClass;
+    for (const [slot, uid] of Object.entries(h.gear ?? {})) {
+      const it = (out.items ?? []).find((i) => i.uid === uid);
+      if (cls && it && ITEM_BY_ID[it.defId] && !canWear(cls, ITEM_BY_ID[it.defId])) delete (h.gear as Record<string, string>)[slot];
+    }
+  }
   out.materials = { ...fresh.materials, ...(s.materials ?? {}) };
   out.buildings = { ...fresh.buildings, ...(s.buildings ?? {}) };
   // Saves from before several parties: the one party becomes Party I.

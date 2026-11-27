@@ -16,19 +16,37 @@ const WEAPONS: WeaponKind[] = [
   { kind: 'staff', label: 'Staff', hands: 2, atk: 6, stats: { arcana: 3 } },
 ];
 
-/** Weapons each class is trained with. Others still work, at half the weapon's damage. */
-export const PROFICIENT: Record<HeroClass, string[]> = {
-  warrior: ['sword', 'axe', 'mace', 'greatsword', 'warhammer'],
-  ranger: ['bow', 'dagger', 'sword'],
-  rogue: ['dagger', 'sword'],
-  mage: ['staff', 'wand', 'dagger'],
-  cleric: ['mace', 'staff', 'wand'],
-  bard: ['sword', 'dagger', 'wand'],
-  paladin: ['sword', 'mace', 'warhammer', 'greatsword'],
-  beastmaster: ['axe', 'dagger', 'bow'],
-  necromancer: ['staff', 'wand', 'dagger'],
-  dragonslayer: ['greatsword', 'axe', 'warhammer', 'sword'],
+/**
+ * What each class can wear: weapons, off-hands and armour, by kind (jewellery is for everyone). A hero
+ * can't put on anything else: no swords for Rangers, no plate for Mages, a quiver only with a bow.
+ */
+export const WEARS: Record<HeroClass, string[]> = {
+  warrior: ['sword', 'axe', 'mace', 'greatsword', 'warhammer', 'shield', 'heavy', 'medium'],
+  paladin: ['sword', 'mace', 'greatsword', 'warhammer', 'shield', 'heavy', 'medium'],
+  dragonslayer: ['greatsword', 'axe', 'warhammer', 'sword', 'shield', 'heavy', 'medium'],
+  ranger: ['bow', 'dagger', 'quiver', 'light', 'medium'],
+  beastmaster: ['axe', 'bow', 'dagger', 'quiver', 'light', 'medium'],
+  rogue: ['dagger', 'sword', 'light'],
+  bard: ['sword', 'dagger', 'wand', 'tome', 'light', 'robe'],
+  cleric: ['mace', 'staff', 'shield', 'tome', 'robe', 'medium'],
+  mage: ['staff', 'wand', 'tome', 'robe'],
+  necromancer: ['staff', 'wand', 'dagger', 'tome', 'robe'],
 };
+
+/** Can a hero of this class wear it? */
+export function canWear(cls: HeroClass, d: ItemDef): boolean {
+  return d.slot === 'jewelry' || (WEARS[cls] ?? []).includes(d.kind);
+}
+
+/** The classes that can wear an item (all of them for jewellery). */
+export function wornBy(d: ItemDef): HeroClass[] {
+  return (Object.keys(WEARS) as HeroClass[]).filter((c) => canWear(c, d));
+}
+
+/** Weapons each class is trained with (the weapons it can wear). */
+export const PROFICIENT: Record<HeroClass, string[]> = Object.fromEntries(
+  (Object.keys(WEARS) as HeroClass[]).map((c) => [c, WEARS[c].filter((k) => WEAPONS.some((w) => w.kind === k))]),
+) as Record<HeroClass, string[]>;
 
 function scale(stats: Partial<Stats> | undefined, t: number): Partial<Stats> {
   const out: Partial<Stats> = {};
@@ -51,7 +69,8 @@ for (let t = 1; t <= 3; t++) {
   items.push({ id: `shield_${t}`, name: `${TIER_NAME[t]} Shield`, slot: 'off', kind: 'shield', tier: t, atk: 0, def: 3 * t, hp: 10 * t, stats: {}, cost: { gold: 45 * t * t, wood: 3 * t, ...metal }, shop: 'armorer' });
   items.push({ id: `tome_${t}`, name: `${['', 'Worn', 'Bound', 'Runed'][t]} Tome`, slot: 'off', kind: 'tome', tier: t, atk: 0, def: 0, hp: 0, stats: { arcana: 2 * t }, cost: { gold: 45 * t * t, hides: 3 * t, herbs: 2 * t }, shop: 'weaponsmith' });
   items.push({ id: `quiver_${t}`, name: `${['', 'Hide', 'Fletched', 'Elven'][t]} Quiver`, slot: 'off', kind: 'quiver', tier: t, atk: 0, def: 0, hp: 0, stats: { finesse: 2 * t }, cost: { gold: 40 * t * t, hides: 4 * t }, shop: 'weaponsmith' });
-  // Armor weights.
+  // Armor weights, and robes for spellcasters.
+  items.push({ id: `robe_${t}`, name: `${['', 'Apprentice', 'Embroidered', 'Archmage'][t]} Robe`, slot: 'armor', kind: 'robe', tier: t, atk: 0, def: t, hp: 8 * t, stats: { arcana: 2 * t }, cost: { gold: 45 * t * t, hides: 2 * t, herbs: 3 * t }, shop: 'armorer' });
   items.push({ id: `light_${t}`, name: `${['', 'Padded', 'Studded', 'Shadowweave'][t]} Jerkin`, slot: 'armor', kind: 'light', tier: t, atk: 0, def: 2 * t, hp: 12 * t, stats: { finesse: t }, cost: { gold: 45 * t * t, hides: 5 * t }, shop: 'armorer' });
   items.push({ id: `medium_${t}`, name: `${TIER_NAME[t]} Mail`, slot: 'armor', kind: 'medium', tier: t, atk: 0, def: 4 * t, hp: 20 * t, stats: {}, cost: { gold: 60 * t * t, hides: 2 * t, ...metal }, shop: 'armorer' });
   items.push({ id: `heavy_${t}`, name: `${TIER_NAME[t]} Plate`, slot: 'armor', kind: 'heavy', tier: t, atk: 0, def: 6 * t, hp: 30 * t, stats: { finesse: -2 }, speed: -10, cost: { gold: 80 * t * t, ...metal, iron: (metal.iron ?? 0) + 4 * t }, shop: 'armorer' });

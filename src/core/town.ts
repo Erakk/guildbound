@@ -2,7 +2,8 @@
 // Everything takes `now` (ms) as an argument so it stays testable.
 
 import { BUILDING_BY_ID, MATERIAL_VALUE } from './data/buildings';
-import { ITEM_BY_ID, ITEMS, PROFICIENT, sellValue } from './data/items';
+import { HERO_BY_ID } from './data/heroes';
+import { canWear, ITEM_BY_ID, ITEMS, PROFICIENT, sellValue } from './data/items';
 import { def, power } from './heroes';
 import type { Cost, GameState, GearSlot, HeroInstance, ItemDef, ItemInstance, Material, RegionDef } from './types';
 import { MATERIALS } from './types';
@@ -175,6 +176,8 @@ export function equip(state: GameState, heroUid: string, itemUid: string): boole
   const item = state.items.find((i) => i.uid === itemUid);
   if (!hero || !item) return false;
   const d = ITEM_BY_ID[item.defId];
+  // Gear is class-specific: a hero can't put on what their class doesn't use.
+  if (!canWear(HERO_BY_ID[hero.defId].heroClass, d)) return false;
   const prev = itemOwner(state, itemUid);
   if (prev) for (const k of Object.keys(prev.gear) as GearSlot[]) if (prev.gear[k] === itemUid) delete prev.gear[k];
   hero.gear[d.slot] = itemUid;

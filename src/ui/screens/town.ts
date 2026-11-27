@@ -1,7 +1,8 @@
 import { buildingSvg } from '../../art/buildings';
 import { itemIconSvg } from '../../art/items';
 import { BUILDING_BY_ID, BUILDINGS, MATERIAL_NAMES } from '../../core/data/buildings';
-import { ITEM_BY_ID, itemSummary, sellValue } from '../../core/data/items';
+import { ITEM_BY_ID, itemSummary, sellValue, wornBy } from '../../core/data/items';
+import { CLASS_NAMES } from '../../core/data/heroes';
 import { def } from '../../core/heroes';
 import * as town from '../../core/town';
 import type { Cost, ItemDef, Material } from '../../core/types';
@@ -486,6 +487,7 @@ function itemRow(d: ItemDef, action: HTMLElement): HTMLElement {
   return h('div.row', { style: { alignItems: 'center', gap: '12px', padding: '8px 0', borderBottom: '1px solid #4a3826' } },
     svgEl(itemIconSvg(d), `bp-big ${d.named ? 'named' : 't' + d.tier}`),
     h('div.grow', h('b', d.named ? { style: { color: '#f1d27a' } } : {}, d.name), h('div.dim', { style: { fontSize: '13px' } }, itemSummary(d)),
+      d.slot !== 'jewelry' ? h('div', { style: { fontSize: '12px', color: '#c9b07a' } }, `Worn by: ${wornBy(d).map((c) => CLASS_NAMES[c]).join(', ')}`) : null,
       d.lore ? h('div.dim', { style: { fontSize: '12px', fontStyle: 'italic' } }, d.lore) : null),
     action);
 }

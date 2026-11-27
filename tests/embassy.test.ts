@@ -252,3 +252,37 @@ describe('trip orders open with the town', () => {
     expect(nextOrderUnlock(s)).toBeNull();
   });
 });
+
+describe('class-specific gear', () => {
+  it('each class wears only its own kinds of gear; jewellery is for everyone', async () => {
+    const { canWear, ITEM_BY_ID, wornBy } = await import('../src/core/data/items');
+    const I = (id: string) => ITEM_BY_ID[id];
+    expect(canWear('ranger', I('sword_1'))).toBe(false);
+    expect(canWear('ranger', I('bow_1'))).toBe(true);
+    expect(canWear('ranger', I('quiver_1'))).toBe(true);
+    expect(canWear('warrior', I('quiver_1'))).toBe(false);
+    expect(canWear('mage', I('robe_1'))).toBe(true);
+    expect(canWear('mage', I('heavy_1'))).toBe(false);
+    expect(canWear('mage', I('staff_1'))).toBe(true);
+    expect(canWear('rogue', I('staff_1'))).toBe(false);
+    expect(canWear('mage', I('ring_arcana_1'))).toBe(true);
+    // Quivers are for bow users only.
+    expect(wornBy(I('quiver_2')).every((c) => canWear(c, I('bow_2')))).toBe(true);
+  });
+
+  it('equipping refuses gear the class can\'t wear; old saves take it off', async () => {
+    const town = await import('../src/core/town');
+    const { migrate } = await import('../src/core/state');
+    const s = newGame(0);
+    const mage = s.roster.find((h) => HERO_BY_ID[h.defId].heroClass === 'mage') ?? addHero(s, HEROES.find((d) => d.heroClass === 'mage' && !d.secret)!.id);
+    const plate = town.addItem(s, 'heavy_1');
+    const robe = town.addItem(s, 'robe_1');
+    expect(town.equip(s, mage.uid, plate.uid)).toBe(false);
+    expect(town.equip(s, mage.uid, robe.uid)).toBe(true);
+    // An old save where the mage wore plate: it goes back in the backpack.
+    mage.gear.armor = plate.uid;
+    const after = migrate(JSON.parse(JSON.stringify(s)));
+    expect(after.roster.find((h) => h.uid === mage.uid)!.gear.armor).toBeUndefined();
+    expect(after.items.some((i) => i.uid === plate.uid)).toBe(true);
+  });
+});

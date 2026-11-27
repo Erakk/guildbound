@@ -1,6 +1,6 @@
 import { SLOT_ICON, itemIconSvg } from '../art/items';
 import { spriteSvg } from '../art/sprites';
-import { PROFICIENT, ITEM_BY_ID } from '../core/data/items';
+import { canWear, ITEM_BY_ID, wornBy } from '../core/data/items';
 import { CLASS_NAMES } from '../core/data/heroes';
 import { def } from '../core/heroes';
 import { heroCombat } from '../core/sim/expedition';
@@ -50,7 +50,7 @@ export function equipmentPanel(app: App, hero: HeroInstance, rerender: () => voi
     const it = itemOf(uid);
     return it ? ITEM_BY_ID[it.defId] : undefined;
   };
-  const trained = (d: ItemDef) => d.slot !== 'main' || PROFICIENT[cls].includes(d.kind);
+  const wearable = (d: ItemDef) => canWear(cls, d);
   const tierCls = (d: ItemDef) => (d.named ? '.named' : `.t${d.tier}`);
 
   /** The hero's fight numbers with this item on instead (two-handed weapons take the off hand too). */
@@ -99,6 +99,7 @@ export function equipmentPanel(app: App, hero: HeroInstance, rerender: () => voi
   };
 
   const put = (uid: string) => {
+    if (!wearable(ITEM_BY_ID[itemOf(uid)!.defId])) return;
     const owner = town.itemOwner(s, uid);
     if (owner && owner.uid !== hero.uid && game.isAway(owner.uid)) return;
     game.equip(hero.uid, uid);
@@ -112,16 +113,16 @@ export function equipmentPanel(app: App, hero: HeroInstance, rerender: () => voi
 
   const cell = (it: ItemInstance) => {
     const d = ITEM_BY_ID[it.defId];
-    const el: HTMLElement = h(`div.bp-cell${tierCls(d)}${selected === it.uid ? '.sel' : ''}`, {
+    const el: HTMLElement = h(`div.bp-cell${tierCls(d)}${selected === it.uid ? '.sel' : ''}${wearable(d) ? '' : '.cant'}`, {
       'data-uid': it.uid,
       onclick: (e: Event) => { e.stopPropagation(); pin(it.uid); },
       ondblclick: () => { if (!away) put(it.uid); },
       onmouseenter: () => showPop(it.uid, el),
       onmouseleave: () => restorePop(),
     }, svgEl(itemIconSvg(d), 'bp-icon'),
-    trained(d) ? null : h('span.bp-warn', { title: 'Not trained with it: half damage' }, '!'),
+    wearable(d) ? null : h('span.bp-warn', { title: `A ${CLASS_NAMES[cls]} can't use this` }, '✕'),
     d.tier > 1 && !d.named ? h('span.bp-tier', 'I'.repeat(d.tier)) : null);
-    drag(el, it.uid, null);
+    if (wearable(d)) drag(el, it.uid, null);
     return el;
   };
 
@@ -138,7 +139,7 @@ export function equipmentPanel(app: App, hero: HeroInstance, rerender: () => voi
       onmouseleave: () => restorePop(),
     }, d ? svgEl(itemIconSvg(d), 'bp-icon') : h('span.bp-empty', { html: SLOT_ICON[slot] }), h('span.bp-slot-lbl', blocked ? 'Two hands' : SLOT_LABEL[slot]));
     if (uid) drag(el, uid, slot);
-    if (!away) drop(el, () => !!dragging && ITEM_BY_ID[itemOf(dragging.uid)!.defId].slot === slot, () => put(dragging!.uid));
+    if (!away) drop(el, () => !!dragging && ITEM_BY_ID[itemOf(dragging.uid)!.defId].slot === slot && wearable(ITEM_BY_ID[itemOf(dragging.uid)!.defId]), () => put(dragging!.uid));
     return el;
   };
 
@@ -150,13 +151,14 @@ export function equipmentPanel(app: App, hero: HeroInstance, rerender: () => voi
     const rows: HTMLElement[] = [];
     const row = (label: string, value: number, what: string) =>
       rows.push(h('div.pop-row', h('b', { style: { color: value > 0 ? '#9fe09a' : '#f0a08a' } }, `${value > 0 ? '+' : ''}${value} ${label}`), h('span', what)));
-    if (d.atk) row('damage', d.atk, d.slot === 'main' && !trained(d) ? `added to every hit, but halved: ${def(hero).name} isn't trained with it` : 'added to every hit');
+    if (d.atk) row('damage', d.atk, 'added to every hit');
     if (d.def) row('armor', d.def, 'taken off every hit the wearer takes');
     if (d.hp) row('health', d.hp, 'more hit points');
     for (const [k, v] of Object.entries(d.stats)) row(k, v!, STAT_HINT[k] ?? '');
     if (d.speed) row('speed', d.speed, d.speed < 0 ? 'heavy: the wearer walks slower' : 'the wearer walks faster');
-    const users = d.slot === 'main' ? Object.entries(PROFICIENT).filter(([, kinds]) => kinds.includes(d.kind)).map(([c]) => CLASS_NAMES[c as keyof typeof CLASS_NAMES]) : [];
-    const deltas = worn ? [] : compare(uid);
+    const users = d.slot === 'jewelry' ? [] : wornBy(d).map((c) => CLASS_NAMES[c]);
+    const can = wearable(d);
+    const deltas = worn || !can ? [] : compare(uid);
     return [
       h('div.pop-head', svgEl(itemIconSvg(d), `bp-big${tierCls(d).replace('.', ' ')}`),
         h('div.col', { style: { gap: '1px' } },
@@ -165,13 +167,14 @@ export function equipmentPanel(app: App, hero: HeroInstance, rerender: () => voi
       h('div.col', { style: { gap: '3px' } }, rows),
       d.hands === 2 ? h('div.pop-note', 'Takes both hands: nothing in the off hand.') : null,
       d.kind === 'shield' ? h('div.pop-note', 'Needs a one-handed weapon (or none).') : null,
-      users.length ? h('div.pop-note', `Trained with it: ${users.join(', ')}. Anyone else does half its damage.`) : null,
+      users.length ? h('div.pop-note', `Worn by: ${users.join(', ')}.`) : h('div.pop-note', 'Anyone can wear it.'),
       d.lore ? h('div.pop-lore', d.lore) : null,
       worn ? h('div.pop-note', { style: { color: '#9ec3f0' } }, `${def(hero).name} is wearing it.`)
+        : !can ? h('div.pop-note', { style: { color: '#f0a08a' } }, `${def(hero).name} can't use it: ${/^[AEIOU]/.test(CLASS_NAMES[cls]) ? 'an' : 'a'} ${CLASS_NAMES[cls]} doesn't wear this.`)
         : h('div.col', { style: { gap: '4px' } }, h('span.dim', { style: { fontSize: '12px' } }, `For ${def(hero).name}, instead of what is on now:`),
           deltas.length ? h('div.row.wrap', { style: { gap: '5px' } }, deltas) : h('span.dim', { style: { fontSize: '12px' } }, 'No change in a fight.')),
       pinned && !away ? h('div.row', { style: { gap: '6px', justifyContent: 'flex-end' } },
-        worn ? h('button.btn.secondary.small', { onclick: () => takeOff(d.slot) }, 'Take off') : h('button.btn.small', { onclick: () => put(uid) }, 'Put on'),
+        worn ? h('button.btn.secondary.small', { onclick: () => takeOff(d.slot) }, 'Take off') : can ? h('button.btn.small', { onclick: () => put(uid) }, 'Put on') : null,
         h('button.btn.secondary.small', { onclick: () => pin(null) }, 'Close')) : null,
     ];
   };

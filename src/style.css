@@ -730,3 +730,7 @@ button.pb-room:hover { border-color: var(--gold); color: #f6e9c9; }
 .pack-flash { position: fixed; inset: 0; z-index: 60; pointer-events: none;
   background: radial-gradient(circle at 50% 50%, rgba(255, 244, 214, 0.9), rgba(181, 138, 224, 0.45) 55%, transparent 80%); animation: packflash 0.9s ease-out forwards; }
 @keyframes packflash { from { opacity: 1; } to { opacity: 0; } }
+
+/* Gear the selected hero's class can't wear: greyed out in the backpack. */
+.bp-cell.cant { filter: grayscale(0.85) brightness(0.6); cursor: not-allowed; }
+.bp-cell.cant .bp-warn { color: #f0a08a; }

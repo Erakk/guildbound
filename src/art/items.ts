@@ -55,6 +55,8 @@ function art(d: ItemDef): string {
       return P('M9 10C9 8 11 7 13 7H38V39H13C11 39 9 38 9 36Z', t === 1 ? '#6E4A2A' : t === 2 ? '#4A3A6E' : '#2E4A6E') + P('M12 36H38V41H13C11 41 10 40 10 38Z', '#F2E6CC', 1.4) + `<path d="M17 7V39" stroke="${OL}" stroke-width="1.4"/>` + `<circle cx="28" cy="22" r="5.5" fill="none" stroke="${gem}" stroke-width="1.8"/><path d="M28 17V27M23 22H33" stroke="${gem}" stroke-width="1.4"/>` + P('M36 18H40V26H36Z', fit, 1.2);
     case 'quiver':
       return L('M20 10L18 4M26 10L27 3M32 11L35 5', WOOD, 1.6) + `<path d="M17 4l2-3l1 3M26 3l1-3l1 3M34 5l2-3l0.6 3.4" fill="#E8E0D0" stroke="${OL}" stroke-width="0.8"/>` + P('M14 12L36 10L34 42C30 44 20 44 18 42Z', LEATHER) + `<path d="M15 20L35 18M16 32L34 30" stroke="${fit}" stroke-width="2"/>` + shine('M18 15L19 38');
+    case 'robe':
+      return P('M16 6L22 5C23 8 25 8 26 5L32 6L38 14L34 18L37 43H11L14 18L10 14Z', t === 3 ? '#3E3A78' : t === 2 ? '#5A4A8A' : '#6E5E9E') + `<path d="M24 9V43" stroke="${OL}" stroke-width="1.2"/>` + `<path d="M12 40H36" stroke="#E2B84A" stroke-width="2.4"/><path d="M19 9L24 15L29 9" fill="none" stroke="#E2B84A" stroke-width="1.6"/>` + shine('M17 10L15 16');
     case 'light':
       return P('M14 8L20 6C22 9 26 9 28 6L34 8L40 16L35 20L34 42H14L13 20L8 16Z', t === 3 ? '#3A3048' : LEATHER) + `<path d="M24 10V42" stroke="${OL}" stroke-width="1.2"/>` + `<path d="M20 16h1M27 16h1M20 24h1M27 24h1M20 32h1M27 32h1" stroke="${fit}" stroke-width="2.4" stroke-linecap="round"/>` + shine('M16 12L14 18');
     case 'medium':

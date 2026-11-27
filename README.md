@@ -33,11 +33,11 @@ Then open http://localhost:5180.
 
 - Materials (wood, stone, iron, herbs, hides) from expeditions, by biome; a Gather focus doubles them.
 - Seven buildings with levels and build timers, one project at a time, capped by the Town Hall: Town Hall, Guild Hall (+XP), Tavern (free pack on a timer), Weaponsmith, Armorer, Temple, Market.
-- Gear: 66 items in three tiers across four slots (main hand, off hand, armor, jewelry), with the one-handed rule and class weapon training. Bought in shops or found in chests.
+- Gear: 66 items in three tiers across four slots (main hand, off hand, armor, jewelry), with the one-handed rule and class-specific gear. Bought in shops or found in chests.
 - Market: sell items and materials, buy materials and jewelry.
 - Wounds: heroes knocked out on a trip must rest before going out again; the Temple shortens that and can heal for gold.
 - Free formation: any mix of front and back rows, including all five in the back.
-- Testing aids: "Finish now (test)" on construction, and the test-speed buttons on the live map.
+- Testing aid: "Finish now (test)" on construction.
 
 **Personalities and crossroads:**
 
@@ -139,7 +139,7 @@ Then open http://localhost:5180.
 
 **The backpack (phase 3x):**
 
-- **Gear is a backpack now.** The hero window has a paper doll (weapon, off hand, armor and jewelry around the hero's figure) and, beside it, every item the guild owns in one grid, sorted by slot and quality, with filters for each slot. Drag an item onto a slot to put it on, or off the doll back into the bag to take it off; double-click does the same. Pointing at an item opens its card right beside it, and a click keeps the card open with a Put on (or Take off) button. The card explains every number on the item in plain words ("+3 armor: taken off every hit the wearer takes"), names the classes trained with a weapon, notes two-handed weapons and shields, and shows what it would change for this hero (damage, armor, health, healing and speed, two-handed weapons included). The bag holds only what nobody is wearing: other heroes keep their gear.
+- **Gear is a backpack now.** The hero window has a paper doll (weapon, off hand, armor and jewelry around the hero's figure) and, beside it, every item the guild owns in one grid, sorted by slot and quality, with filters for each slot. Drag an item onto a slot to put it on, or off the doll back into the bag to take it off; double-click does the same. Pointing at an item opens its card right beside it, and a click keeps the card open with a Put on (or Take off) button. The card explains every number on the item in plain words ("+3 armor: taken off every hit the wearer takes"), names the classes that can wear it, notes two-handed weapons and shields, and shows what it would change for this hero (damage, armor, health, healing and speed, two-handed weapons included). The bag holds only what nobody is wearing: other heroes keep their gear.
 - **Every item has an icon:** iron, steel and mithril look different, and named gear has gold fittings and a glow. The shops and the Market show the same icons.
 - **The tutorial gives one Iron Sword** instead of a full set of four; the rest comes from the smiths and the Marches. The tutorial's Tavern goes up in 10 seconds (later levels as before).
 
@@ -301,6 +301,25 @@ The party turns back later while underground, and climbs back up the stairs on t
 **Camera fix:** the Watch screen's camera centres on the party again. It averaged everyone on the party's side, including the escort wagon and the lost traveller (Rescue goal) waiting far up the trail, which pulled the view ahead of the party. It now leaves out anyone still waiting up the trail or gone, and anyone far from the leader.
 
 **Speech bubbles follow the speaker:** on the Watch screen, a hero's (or anyone's) speech bubble rides above their head as they move, lifting a little and fading at the end, instead of staying where they stood. A new line from the same speaker replaces their last bubble.
+
+**Gear is class-specific (`WEARS` in `core/data/items.ts`):** each class wears only its own kinds of weapon, off hand and armor; jewelry is for everyone. Rangers take bows, daggers, quivers and light or medium armor, but no swords; only bow users (Rangers, Beastmasters) carry quivers; plate is for Warriors, Paladins and Dragonslayers; staves and robes are for the spellcasters.
+
+| Class | Weapons | Off hand | Armor |
+| --- | --- | --- | --- |
+| Warrior | sword, axe, mace, greatsword, warhammer | shield | heavy, medium |
+| Paladin | sword, mace, greatsword, warhammer | shield | heavy, medium |
+| Dragonslayer | greatsword, axe, warhammer, sword | shield | heavy, medium |
+| Ranger | bow, dagger | quiver | light, medium |
+| Beastmaster | axe, bow, dagger | quiver | light, medium |
+| Rogue | dagger, sword | | light |
+| Bard | sword, dagger, wand | tome | light, robe |
+| Cleric | mace, staff | shield, tome | robe, medium |
+| Mage | staff, wand | tome | robe |
+| Necromancer | staff, wand, dagger | tome | robe |
+
+- **Robes**, new at the Armorer in three tiers (Apprentice, Embroidered, Archmage): a little armor and health plus arcana, for the casters who can't wear mail.
+- **In the backpack**, gear the open hero can't wear is greyed out with a ✕: it can't be dragged or put on, and its card says so ("Elowen can't use it: a Mage doesn't wear this."). Every item card and every shop row lists who wears it.
+- The old rule (any hero could use any weapon at half damage) is gone. Fights ignore anything a hero can't wear, and older saves move such gear back into the backpack.
 
 **New card art (phase 3r):** every card is redrawn in the style of the final card design (Brannoc's card in the concept canvas).
 

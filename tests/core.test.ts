@@ -282,7 +282,7 @@ describe('benchmark balance (printed, not asserted)', () => {
     const GEAR = [0, 1, 1, 2];
     const KIT: Record<string, string[]> = {
       warrior: ['axe', 'shield', 'heavy'], rogue: ['dagger', 'light'], ranger: ['bow', 'light'],
-      mage: ['staff', 'light'], cleric: ['mace', 'shield', 'medium'], bard: ['sword', 'light'],
+      mage: ['staff', 'robe'], cleric: ['mace', 'shield', 'medium'], bard: ['sword', 'light'],
     };
     const rows: string[] = [];
     for (const r of REGIONS) {
@@ -482,7 +482,7 @@ describe('sieges', () => {
     const { def } = await import('../src/core/heroes');
     const KIT: Record<string, string[]> = {
       warrior: ['axe', 'shield', 'heavy'], rogue: ['dagger', 'light'], ranger: ['bow', 'light'],
-      mage: ['staff', 'light'], cleric: ['mace', 'shield', 'medium'], bard: ['sword', 'light'],
+      mage: ['staff', 'robe'], cleric: ['mace', 'shield', 'medium'], bard: ['sword', 'light'],
     };
     const state = newGame(0);
     return state.parties[0].slots.map((u, i) => {
@@ -648,7 +648,7 @@ describe('tribe map abilities', () => {
         const { def } = await import('../src/core/heroes');
         const KIT: Record<string, string[]> = {
           warrior: ['axe', 'shield', 'heavy'], rogue: ['dagger', 'light'], ranger: ['bow', 'light'],
-          mage: ['staff', 'light'], cleric: ['mace', 'shield', 'medium'], bard: ['sword', 'light'],
+          mage: ['staff', 'robe'], cleric: ['mace', 'shield', 'medium'], bard: ['sword', 'light'],
         };
         const party = await tribeParty(ids, 14);
         for (const p of party) {
@@ -877,7 +877,7 @@ describe('endgame permadeath', () => {
     const { addHero } = await import('../src/core/state');
     const KIT: Record<string, string[]> = {
       warrior: ['axe', 'shield', 'heavy'], rogue: ['dagger', 'light'], ranger: ['bow', 'light'],
-      mage: ['staff', 'light'], cleric: ['mace', 'shield', 'medium'], bard: ['sword', 'light'],
+      mage: ['staff', 'robe'], cleric: ['mace', 'shield', 'medium'], bard: ['sword', 'light'],
     };
     const state = newGame(0);
     return ids.map((id, i) => {
@@ -1023,7 +1023,7 @@ describe('more sieges', () => {
   const strong = async () => {
     const { ITEM_BY_ID } = await import('../src/core/data/items');
     const { def } = await import('../src/core/heroes');
-    const KIT: Record<string, string[]> = { warrior: ['axe', 'shield', 'heavy'], rogue: ['dagger', 'light'], ranger: ['bow', 'light'], mage: ['staff', 'light'], cleric: ['mace', 'shield', 'medium'], bard: ['sword', 'light'] };
+    const KIT: Record<string, string[]> = { warrior: ['axe', 'shield', 'heavy'], rogue: ['dagger', 'light'], ranger: ['bow', 'light'], mage: ['staff', 'robe'], cleric: ['mace', 'shield', 'medium'], bard: ['sword', 'light'] };
     const state = newGame(0);
     return state.parties[0].slots.map((u, i) => { const hero = state.roster.find((x) => x.uid === u)!; hero.level = 20; hero.stars = 3; return { hero, row: state.parties[0].rows[i], items: KIT[def(hero).heroClass].map((k) => ITEM_BY_ID[`${k}_3`]) }; });
   };
@@ -1084,7 +1084,7 @@ describe('the far Marches (rings 4-7)', () => {
   it('prints how strong and endgame parties do in rings 5-7 (printed, not asserted)', async () => {
     const { ITEM_BY_ID } = await import('../src/core/data/items');
     const { def } = await import('../src/core/heroes');
-    const KIT: Record<string, string[]> = { warrior: ['axe', 'shield', 'heavy'], rogue: ['dagger', 'light'], ranger: ['bow', 'light'], mage: ['staff', 'light'], cleric: ['mace', 'shield', 'medium'], bard: ['sword', 'light'] };
+    const KIT: Record<string, string[]> = { warrior: ['axe', 'shield', 'heavy'], rogue: ['dagger', 'light'], ranger: ['bow', 'light'], mage: ['staff', 'robe'], cleric: ['mace', 'shield', 'medium'], bard: ['sword', 'light'] };
     const rows: string[] = [];
     for (const [label, level, stars] of [['strong', 20, 3], ['endgame', 30, 4], ['legend', 40, 5]] as const) {
       for (const tier of [5, 6, 7]) {
@@ -1111,7 +1111,7 @@ describe('Cinder Legion', () => {
     const { addHero } = await import('../src/core/state');
     const { ITEM_BY_ID } = await import('../src/core/data/items');
     const { def } = await import('../src/core/heroes');
-    const KIT: Record<string, string[]> = { warrior: ['axe', 'shield', 'heavy'], rogue: ['dagger', 'light'], ranger: ['bow', 'light'], mage: ['staff', 'light'], cleric: ['mace', 'shield', 'medium'], bard: ['sword', 'light'] };
+    const KIT: Record<string, string[]> = { warrior: ['axe', 'shield', 'heavy'], rogue: ['dagger', 'light'], ranger: ['bow', 'light'], mage: ['staff', 'robe'], cleric: ['mace', 'shield', 'medium'], bard: ['sword', 'light'] };
     const state = newGame(0);
     return ids.map((id, i) => { const hero = state.roster.find((h) => h.defId === id) ?? addHero(state, id); hero.level = level; hero.stars = stars; return { hero, row: (i < 2 ? 'front' : 'back') as 'front' | 'back', items: (KIT[def(hero).heroClass] ?? []).map((k) => ITEM_BY_ID[`${k}_3`]) }; });
   };
@@ -1357,7 +1357,7 @@ describe('mid-game balance', () => {
     const town = await import('../src/core/town');
     const { recommendedPower } = await import('../src/core/data/world');
     // Level 16, 2 stars, Steel kit: about 1100 power, the tier-4 recommendation.
-    const KIT: Record<string, string[]> = { warrior: ['axe', 'shield', 'heavy'], rogue: ['dagger', 'light'], ranger: ['bow', 'light'], mage: ['staff', 'light'], cleric: ['mace', 'shield', 'medium'] };
+    const KIT: Record<string, string[]> = { warrior: ['axe', 'shield', 'heavy'], rogue: ['dagger', 'light'], ranger: ['bow', 'light'], mage: ['staff', 'robe'], cleric: ['mace', 'shield', 'medium'] };
     const state = newGame(0);
     for (const h of state.roster) {
       h.level = 16; h.stars = 2;
@@ -1383,7 +1383,7 @@ describe('scouting, sites, captains and secret heroes', () => {
   const strongParty = async (level = 30, stars = 4) => {
     const { ITEM_BY_ID } = await import('../src/core/data/items');
     const { def } = await import('../src/core/heroes');
-    const KIT: Record<string, string[]> = { warrior: ['axe_3', 'shield_3', 'heavy_3'], rogue: ['dagger_3', 'light_3'], ranger: ['bow_3', 'light_3'], mage: ['staff_3', 'light_3'], cleric: ['mace_3', 'shield_3', 'medium_3'] };
+    const KIT: Record<string, string[]> = { warrior: ['axe_3', 'shield_3', 'heavy_3'], rogue: ['dagger_3', 'light_3'], ranger: ['bow_3', 'light_3'], mage: ['staff_3', 'robe_3'], cleric: ['mace_3', 'shield_3', 'medium_3'] };
     const state = newGame(0);
     const party = state.parties[0].slots.map((u, i) => {
       const hero = state.roster.find((h) => h.uid === u)!;

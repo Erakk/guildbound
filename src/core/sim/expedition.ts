@@ -15,7 +15,7 @@ import { HERO_BY_ID, TRIBE_NAMES } from '../data/heroes';
 import type { Season, TimeOfDay } from '../time';
 import { chestPieceRoll, earlyPieces, FIND_PIECE_ROLL, PACKS, SECRET_PIECE_ROLL, type PackType, type PieceRoll } from '../data/packs';
 import { FOREST_BIOMES, ROAD_BIOMES, SECRET_BY_KIND, SECRET_PATHS, type SecretKind } from '../data/secrets';
-import { ITEM_BY_ID, LOOT_ITEMS, NAMED_ITEMS, PROFICIENT } from '../data/items';
+import { canWear, ITEM_BY_ID, LOOT_ITEMS, NAMED_ITEMS, PROFICIENT } from '../data/items';
 import { captainStyle, type CaptainMods } from '../data/captains';
 import { DISCOVERY_BY_ID, discoveriesFor, discoveryWeight, LEANS, type DiscoveryDef } from '../data/discoveries';
 import { AREA_LANDMARKS, BIOME_LANDMARKS, HAZARDS, hazardFor, LANDMARK_BY_ID, type HazardKind, type LandmarkDef, type LandmarkEffect } from '../data/landmarks';
@@ -458,7 +458,8 @@ export const BIOME_MATERIALS: Record<Biome, [Material, Material]> = {
 };
 
 /** Combat numbers for a hero, including equipped gear. Off-class weapons deal half their damage. */
-export function heroCombat(h: HeroInstance, items: ItemDef[] = []) {
+export function heroCombat(h: HeroInstance, worn: ItemDef[] = []) {
+  const items = worn.filter((d) => canWear(HERO_BY_ID[h.defId].heroClass, d));
   const s: Stats = { ...stats(h) };
   for (const it of items) for (const [k, v] of Object.entries(it.stats)) s[k as keyof Stats] = Math.max(1, s[k as keyof Stats] + v!);
   const cls = HERO_BY_ID[h.defId].heroClass;
